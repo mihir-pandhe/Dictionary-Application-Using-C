@@ -4,21 +4,43 @@
 #define MAX_WORDS 100
 #define MAX_WORD_LENGTH 50
 #define MAX_DEFINITION_LENGTH 200
+#define DICTIONARY_FILE "dictionary.txt"
 
 typedef struct {
     char word[MAX_WORD_LENGTH];
     char definition[MAX_DEFINITION_LENGTH];
 } DictionaryEntry;
 
-DictionaryEntry dictionary[MAX_WORDS] = {
-    {"apple", "A fruit that is typically red, green, or yellow."},
-    {"banana", "A long curved fruit that grows in clusters and has soft pulpy flesh and yellow skin when ripe."},
-    {"cat", "A small domesticated carnivorous mammal with soft fur, a short snout, and retractile claws."},
-    {"dog", "A domesticated carnivorous mammal that typically has a long snout, an acute sense of smell, non-retractable claws, and a barking, howling, or whining voice."},
-    {"elephant", "A large herbivorous mammal with a trunk, native to Africa and southern Asia."}
-};
+DictionaryEntry dictionary[MAX_WORDS];
+int wordCount = 0;
 
-int wordCount = 5;
+void loadDictionary() {
+    FILE *file = fopen(DICTIONARY_FILE, "r");
+    if (file == NULL) {
+        printf("No dictionary file found. Starting with an empty dictionary.\n");
+        return;
+    }
+
+    while (fscanf(file, "%s %[^\n]", dictionary[wordCount].word, dictionary[wordCount].definition) != EOF) {
+        wordCount++;
+    }
+
+    fclose(file);
+}
+
+void saveDictionary() {
+    FILE *file = fopen(DICTIONARY_FILE, "w");
+    if (file == NULL) {
+        printf("Error saving dictionary.\n");
+        return;
+    }
+
+    for (int i = 0; i < wordCount; i++) {
+        fprintf(file, "%s %s\n", dictionary[i].word, dictionary[i].definition);
+    }
+
+    fclose(file);
+}
 
 void lookupWord(char *word) {
     for (int i = 0; i < wordCount; i++) {
@@ -39,12 +61,15 @@ void addWord(char *word, char *definition) {
     strcpy(dictionary[wordCount].definition, definition);
     wordCount++;
     printf("Word added successfully.\n");
+    saveDictionary();
 }
 
 int main() {
     int choice;
     char word[MAX_WORD_LENGTH];
     char definition[MAX_DEFINITION_LENGTH];
+
+    loadDictionary();
 
     while (1) {
         printf("1. Look up word\n2. Add word\n3. Exit\nEnter your choice: ");
@@ -67,6 +92,7 @@ int main() {
                 addWord(word, definition);
                 break;
             case 3:
+                saveDictionary();
                 return 0;
             default:
                 printf("Invalid choice. Try again.\n");
